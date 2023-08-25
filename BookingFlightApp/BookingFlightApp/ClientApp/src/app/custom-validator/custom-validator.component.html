@@ -1,0 +1,17 @@
+<div *ngIf="formControl.invalid && (formControl.dirty || formControl.touched)" class="invalid-feedback d-block">
+  <div *ngIf="formControl.errors?.['required']">
+    {{fieldName}} {{requiredMsg}}
+  </div>
+  <div *ngIf="formControl.errors?.['min']">
+    {{fieldName}} {{minMsg}}
+  </div>
+  <div *ngIf="formControl.errors?.['max']">
+    {{fieldName}} {{maxMsg}}
+  </div>
+  <div *ngIf="formControl.errors?.['minLength']">
+    {{fieldName}} {{minLengthMsg}}
+  </div>
+  <div *ngIf="formControl.errors?.['maxLength']">
+    {{fieldName}} {{maxLengthMsg}}
+  </div>
+</div>

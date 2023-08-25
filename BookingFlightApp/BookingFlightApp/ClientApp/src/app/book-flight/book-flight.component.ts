@@ -1,0 +1,72 @@
+import { Component } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FlightService } from '../api/services/flight.service';
+import { FlightRm } from '../api/models/flight-rm';
+import { AuthService } from '../auth/auth.service';
+import { FormBuilder, Validators } from '@angular/forms';
+import { BookDto } from '../api/models';
+
+@Component({
+  selector: 'app-book-flight',
+  templateUrl: './book-flight.component.html',
+  styleUrls: ['./book-flight.component.css']
+})
+export class BookFlightComponent {
+  constructor(private route: ActivatedRoute,
+    private router: Router,
+    private flightService: FlightService,
+    private authService: AuthService,
+    private fb: FormBuilder) { }
+
+  flightId: string = 'not loaded'
+  flight: FlightRm = {}
+
+  form = this.fb.group({
+    number: [1, Validators.compose([Validators.required, Validators.min(1), Validators.max(254)])]
+  })
+
+  ngOnInit(): void {
+    this.route.paramMap
+    .subscribe(p => this.findFlight(p.get("flightId")))
+  }
+
+  private findFlight = (flightId: string | null) => {
+    this.flightId = flightId ?? 'not passed';
+
+    this.flightService.findFlight({ id: this.flightId })
+      .subscribe(flight => this.flight = flight, this.handleError);
+  }
+
+  private handleError = (err: any) => {
+    if (err.status = 404) {
+      alert("Flight not found!");
+      this.router.navigate(['/search-flights']);
+
+      console.log("Response status: " + err.status);
+      console.log("Response status text: " + err.statusText);
+      console.log(err);
+    }
+  }
+
+  book = () => {
+    if (this.form.invalid) {
+      return;
+    }
+
+    const formNumberOfSeat = this.form.get('number')?.value;
+    console.log(`Booking ${formNumberOfSeat} passengers for the flight: ${this.flightId}`)
+
+    const booking: BookDto = {
+      flightId: this.flight.id,
+      passengerEmail: this.authService.currentUser?.email,
+      numberOfSeats: formNumberOfSeat ?? 1
+    };
+
+    this.flightService.bookFlight({ body: booking })
+      .subscribe(_ => this.router.navigate(['/my-bookings']), this.handleError);
+  }
+
+  get number() {
+    return this.form.controls.number;
+  }
+}
